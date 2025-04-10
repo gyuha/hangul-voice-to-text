@@ -8,6 +8,13 @@ from datetime import datetime, timedelta
 def extract_audio(mp4_path):
     """MP4 파일에서 오디오를 추출하여 WAV 파일로 저장"""
     wav_path = mp4_path.replace('.mp4', '.wav')
+    
+    # 이미 WAV 파일이 존재하는 경우
+    if os.path.exists(wav_path):
+        print(f"기존 오디오 파일을 사용합니다: {wav_path}")
+        return wav_path
+    
+    print("오디오 추출 중...")
     command = [
         'ffmpeg',
         '-i', mp4_path,
@@ -45,10 +52,9 @@ def create_srt(segments, output_path):
             f.write(f"{start_time} --> {end_time}\n")
             f.write(f"{text}\n\n")
 
-def transcribe_video(mp4_path, model_size="base"):
+def transcribe_video(mp4_path, model_size="base", keep_audio=False):
     """MP4 파일을 SRT 자막으로 변환"""
     # 오디오 추출
-    print("오디오 추출 중...")
     wav_path = extract_audio(mp4_path)
     if not wav_path:
         return False
@@ -69,22 +75,24 @@ def transcribe_video(mp4_path, model_size="base"):
         
         return True
     finally:
-        # 임시 WAV 파일 삭제
-        if os.path.exists(wav_path):
+        # 임시 WAV 파일 삭제 (keep_audio가 False인 경우에만)
+        if not keep_audio and os.path.exists(wav_path):
             os.remove(wav_path)
 
 def main():
     parser = argparse.ArgumentParser(description='MP4 파일에서 SRT 자막을 추출')
     parser.add_argument('mp4_file', help='변환할 MP4 파일 경로')
-    parser.add_argument('--model', default='base', choices=['tiny', 'base', 'small', 'medium', 'large'],
-                      help='사용할 Whisper 모델 크기 (기본값: base)')
+    parser.add_argument('--model', default='large', choices=['tiny', 'base', 'small', 'medium', 'large'],
+                      help='사용할 Whisper 모델 크기 (기본값: large)')
+    parser.add_argument('--keep-audio', action='store_true',
+                      help='오디오 파일을 삭제하지 않고 보존')
     args = parser.parse_args()
 
     if not os.path.exists(args.mp4_file):
         print(f"오류: 파일을 찾을 수 없습니다: {args.mp4_file}")
         return
 
-    success = transcribe_video(args.mp4_file, args.model)
+    success = transcribe_video(args.mp4_file, args.model, args.keep_audio)
     if not success:
         print("자막 생성에 실패했습니다.")
 

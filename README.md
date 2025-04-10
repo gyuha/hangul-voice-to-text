@@ -1,6 +1,7 @@
 # 음성-텍스트 변환기
 
 MP3 파일에서 음성을 텍스트로 변환하는 Python 스크립트입니다. Google Speech Recognition과 OpenAI Whisper 두 가지 방법을 지원합니다.
+또한 MP4 파일에서 SRT 자막을 추출하는 기능도 제공합니다.
 
 ## 설치 방법
 
@@ -34,6 +35,11 @@ python main.py [MP3 파일 경로]
 python whisper_transcribe.py [MP3 파일 경로] [--model MODEL_SIZE]
 ```
 
+### 3. MP4에서 SRT 자막 추출
+```bash
+python mp4_srt_puller.py [MP4 파일 경로] [--model MODEL_SIZE]
+```
+
 모델 크기 옵션:
 - `tiny`: 가장 작은 모델 (빠른 속도, 낮은 정확도)
 - `base`: 기본 모델 (권장)
@@ -43,7 +49,7 @@ python whisper_transcribe.py [MP3 파일 경로] [--model MODEL_SIZE]
 
 예시:
 ```bash
-python whisper_transcribe.py sample.mp3 --model base
+python mp4_srt_puller.py video.mp4 --model base
 ```
 
 ## 참고사항
@@ -56,4 +62,10 @@ python whisper_transcribe.py sample.mp3 --model base
 - 오프라인에서 작동합니다.
 - 더 높은 정확도를 제공합니다.
 - 모델 크기에 따라 처리 속도가 달라집니다.
-- 처음 실행 시 모델을 다운로드합니다. 
+- 처음 실행 시 모델을 다운로드합니다.
+
+### MP4에서 SRT 자막 추출
+- FFmpeg가 필요합니다.
+- MP4 파일에서 오디오를 추출하여 처리합니다.
+- 자동으로 타임스탬프가 포함된 SRT 파일을 생성합니다.
+- 처리 완료 후 임시 WAV 파일은 자동으로 삭제됩니다. 

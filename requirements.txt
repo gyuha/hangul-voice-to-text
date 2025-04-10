@@ -1,0 +1,5 @@
+SpeechRecognition==3.10.0
+pydub==0.25.1
+python-dotenv==1.0.0
+openai-whisper==20231117
+torch==2.1.0 

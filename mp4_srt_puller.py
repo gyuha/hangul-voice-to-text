@@ -4,6 +4,8 @@ import subprocess
 import os
 import json
 from datetime import datetime, timedelta
+import sys
+import time
 
 def extract_audio(mp4_path):
     """MP4 파일에서 오디오를 추출하여 WAV 파일로 저장"""
@@ -52,6 +54,17 @@ def create_srt(segments, output_path):
             f.write(f"{start_time} --> {end_time}\n")
             f.write(f"{text}\n\n")
 
+def print_progress(segment, total_segments, current_segment):
+    """진행 상황과 인식된 텍스트를 출력"""
+    # 진행률 표시
+    progress = (current_segment / total_segments) * 100
+    sys.stdout.write(f"\r진행률: {progress:.1f}% ({current_segment}/{total_segments})")
+    sys.stdout.flush()
+    
+    # 인식된 텍스트 출력
+    print(f"\n시간: {format_timestamp(segment['start'])} --> {format_timestamp(segment['end'])}")
+    print(f"인식된 텍스트: {segment['text'].strip()}\n")
+
 def transcribe_video(mp4_path, model_size="base", keep_audio=False):
     """MP4 파일을 SRT 자막으로 변환"""
     # 오디오 추출
@@ -66,12 +79,25 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
         
         # 음성 인식 실행
         print("음성 인식 중...")
-        result = model.transcribe(wav_path, language="ko")
+        
+        # 음성 인식 실행
+        result = model.transcribe(
+            wav_path,
+            language="ko",
+            verbose=True  # 자세한 로그 출력
+        )
+        
+        # 진행 상황 출력
+        total_segments = len(result['segments'])
+        for i, segment in enumerate(result['segments'], 1):
+            print_progress(segment, total_segments, i)
+            # 실시간으로 보이도록 잠시 대기
+            time.sleep(0.1)
         
         # SRT 파일 생성
         srt_path = mp4_path.replace('.mp4', '.srt')
         create_srt(result['segments'], srt_path)
-        print(f"자막 파일이 생성되었습니다: {srt_path}")
+        print(f"\n자막 파일이 생성되었습니다: {srt_path}")
         
         return True
     finally:
@@ -82,8 +108,8 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
 def main():
     parser = argparse.ArgumentParser(description='MP4 파일에서 SRT 자막을 추출')
     parser.add_argument('mp4_file', help='변환할 MP4 파일 경로')
-    parser.add_argument('--model', default='large', choices=['tiny', 'base', 'small', 'medium', 'large'],
-                      help='사용할 Whisper 모델 크기 (기본값: large)')
+    parser.add_argument('--model', default='base', choices=['tiny', 'base', 'small', 'medium', 'large'],
+                      help='사용할 Whisper 모델 크기 (기본값: base)')
     parser.add_argument('--keep-audio', action='store_true',
                       help='오디오 파일을 삭제하지 않고 보존')
     args = parser.parse_args()

@@ -1,2 +1,4 @@
 *.mp3
+*.srt
+*.txt
 venv/

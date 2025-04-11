@@ -1,13 +1,17 @@
 import argparse
-import json
 import os
+import shutil
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import whisper
 
+
+def check_ffmpeg_available():
+    """Check if ffmpeg is available in the system path"""
+    return shutil.which('ffmpeg') is not None
 
 def extract_audio(mp4_path):
     """MP4 파일에서 오디오를 추출하여 WAV 파일로 저장"""
@@ -17,6 +21,13 @@ def extract_audio(mp4_path):
     if os.path.exists(wav_path):
         print(f"기존 오디오 파일을 사용합니다: {wav_path}")
         return wav_path
+    
+    # Check if ffmpeg is available
+    if not check_ffmpeg_available():
+        print("오류: ffmpeg가 설치되어 있지 않거나 시스템 경로에 없습니다.")
+        print("ffmpeg를 설치하고 시스템 경로에 추가한 후 다시 시도해주세요.")
+        print("다운로드 링크: https://ffmpeg.org/download.html")
+        return None
     
     print("오디오 추출 중...")
     command = [
@@ -34,7 +45,12 @@ def extract_audio(mp4_path):
         subprocess.run(command, check=True, capture_output=True)
         return wav_path
     except subprocess.CalledProcessError as e:
-        print(f"오디오 추출 중 오류 발생: {e.stderr.decode()}")
+        print(f"오디오 추출 중 오류 발생: {e.stderr.decode() if e.stderr else str(e)}")
+        return None
+    except FileNotFoundError:
+        print("오류: ffmpeg 실행 파일을 찾을 수 없습니다.")
+        print("ffmpeg를 설치하고 시스템 경로에 추가한 후 다시 시도해주세요.")
+        print("다운로드 링크: https://ffmpeg.org/download.html")
         return None
 
 def format_timestamp(seconds):

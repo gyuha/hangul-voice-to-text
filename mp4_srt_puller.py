@@ -6,6 +6,7 @@ import sys
 import time
 from datetime import timedelta
 
+import torch  # 추가: PyTorch 라이브러리 가져오기
 import whisper
 
 
@@ -132,9 +133,16 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
         return False
     
     try:
-        # Whisper 모델 로드
-        print(f"모델 {model_size}을 로드 중...")
-        model = whisper.load_model(model_size)
+        # GPU 사용 가능 여부 확인
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        if device == "cuda":
+            print(f"GPU를 사용하여 처리합니다: {torch.cuda.get_device_name(0)}")
+        else:
+            print("경고: GPU를 찾을 수 없어 CPU를 사용합니다.")
+        
+        # Whisper 모델 로드 (GPU 사용 명시)
+        print(f"모델 {model_size}을 {device}에 로드 중...")
+        model = whisper.load_model(model_size, device=device)
         
         # 음성 인식 실행
         print("음성 인식 중...")
@@ -149,7 +157,8 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
             logprob_threshold=-1.0,  # 로그 확률 임계값 설정
             no_speech_threshold=0.6,  # 무음 임계값 설정
             condition_on_previous_text=True,  # 이전 텍스트를 고려
-            initial_prompt="다음은 한국어 음성입니다."  # 초기 프롬프트 설정
+            initial_prompt="",  # 초기 프롬프트 설정
+            fp16=device == "cuda"  # GPU 사용 시 FP16 활성화
         )
         
         # 연속된 동일한 텍스트 합치기

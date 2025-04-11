@@ -1,7 +1,10 @@
-import whisper
 import argparse
-from pydub import AudioSegment
 import os
+
+import torch  # 추가: PyTorch 라이브러리 가져오기
+import whisper
+from pydub import AudioSegment
+
 
 def convert_mp3_to_wav(mp3_path):
     """MP3 파일을 WAV 파일로 변환"""
@@ -12,11 +15,22 @@ def convert_mp3_to_wav(mp3_path):
 
 def transcribe_audio(audio_path, model_size="base"):
     """Whisper를 사용하여 음성을 텍스트로 변환"""
-    # 모델 로드
-    model = whisper.load_model(model_size)
+    # GPU 사용 가능 여부 확인
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    if device == "cuda":
+        print(f"GPU를 사용하여 처리합니다: {torch.cuda.get_device_name(0)}")
+    else:
+        print("경고: GPU를 찾을 수 없어 CPU를 사용합니다.")
     
-    # 음성 인식 실행
-    result = model.transcribe(audio_path, language="ko")
+    # 모델 로드 (GPU 사용 명시)
+    model = whisper.load_model(model_size, device=device)
+    
+    # 음성 인식 실행 (fp16 옵션 추가)
+    result = model.transcribe(
+        audio_path, 
+        language="ko",
+        fp16=device == "cuda"  # GPU 사용 시 FP16 활성화
+    )
     
     return result["text"]
 
@@ -41,4 +55,4 @@ def main():
     print(text)
 
 if __name__ == "__main__":
-    main() 
+    main()

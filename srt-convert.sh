@@ -25,14 +25,33 @@ fi
 
 echo "총 ${MP4_COUNT}개의 MP4 파일을 처리합니다."
 
+# 시간 측정 결과를 저장할 파일
+TIME_LOG="time.txt"
+echo "파일명,소요시간(초)" > "$TIME_LOG"
+
 # 각 MP4 파일 처리
 for mp4_file in "$FOLDER_PATH"/*.mp4; do
     if [ -f "$mp4_file" ]; then
-        echo "처리 중: $(basename "$mp4_file")"
+        filename=$(basename "$mp4_file")
+        echo "처리 중: $filename"
+        
+        # 시작 시간 기록
+        start_time=$(date +%s)
+        
+        # 파일 처리
         python mp4_srt_puller.py "$mp4_file" --model medium --keep-audio
-        echo "완료: $(basename "$mp4_file")"
+        
+        # 종료 시간 기록 및 소요 시간 계산
+        end_time=$(date +%s)
+        elapsed_time=$((end_time - start_time))
+        
+        # 결과 기록
+        echo "$filename\t$elapsed_time" >> "$TIME_LOG"
+        
+        echo "완료: $filename (소요시간: ${elapsed_time}초)"
         echo "----------------------------------------"
     fi
 done
 
-echo "모든 파일 처리가 완료되었습니다." 
+echo "모든 파일 처리가 완료되었습니다."
+echo "시간 측정 결과는 $TIME_LOG 파일에서 확인할 수 있습니다." 

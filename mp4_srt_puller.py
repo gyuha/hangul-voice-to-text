@@ -67,6 +67,12 @@ def print_progress(segment, total_segments, current_segment):
 
 def transcribe_video(mp4_path, model_size="base", keep_audio=False):
     """MP4 파일을 SRT 자막으로 변환"""
+    # 이미 SRT 파일이 존재하는지 확인
+    srt_path = mp4_path.replace('.mp4', '.srt')
+    if os.path.exists(srt_path):
+        print(f"이미 처리된 파일입니다: {srt_path}")
+        return True
+    
     # 오디오 추출
     wav_path = extract_audio(mp4_path)
     if not wav_path:
@@ -85,13 +91,9 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
             wav_path,
             language="ko",
             verbose=True,  # 자세한 로그 출력
-            # compression_ratio_threshold=3.4,
-            # logprob_threshold=-1.0,
-            # no_speech_threshold=0.6,
-            # condition_on_previous_text=True,
-            # initial_prompt=None,
-            # word_timestamps=True,
-            
+            compression_ratio_threshold=2.8
+            logprob_threshold=-1.0,
+            no_speech_threshold=0.5,
         )
         
         # 진행 상황 출력
@@ -102,7 +104,6 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
             time.sleep(0.1)
         
         # SRT 파일 생성
-        srt_path = mp4_path.replace('.mp4', '.srt')
         create_srt(result['segments'], srt_path)
         print(f"\n자막 파일이 생성되었습니다: {srt_path}")
         

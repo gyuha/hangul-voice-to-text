@@ -47,7 +47,7 @@ for mp4_file in "$FOLDER_PATH"/*.mp4; do
         start_time=$(date +%s)
         
         # 파일 처리
-        python mp4_srt_puller.py "$mp4_file" --model medium --keep-audio
+        python mp4_srt_puller.py "$mp4_file" --model large-v3 --keep-audio
         
         # 종료 시간 기록 및 소요 시간 계산
         end_time=$(date +%s)

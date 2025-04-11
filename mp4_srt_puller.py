@@ -1,11 +1,13 @@
-import whisper
 import argparse
-import subprocess
-import os
 import json
-from datetime import datetime, timedelta
+import os
+import subprocess
 import sys
 import time
+from datetime import datetime, timedelta
+
+import whisper
+
 
 def extract_audio(mp4_path):
     """MP4 파일에서 오디오를 추출하여 WAV 파일로 저장"""
@@ -93,8 +95,17 @@ def print_progress(segment, total_segments, current_segment):
 
 def transcribe_video(mp4_path, model_size="base", keep_audio=False):
     """MP4 파일을 SRT 자막으로 변환"""
+    # output 폴더 생성
+    output_dir = "output"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    # SRT 파일 경로 설정
+    filename = os.path.basename(mp4_path)
+    srt_filename = os.path.splitext(filename)[0] + '.srt'
+    srt_path = os.path.join(output_dir, srt_filename)
+    
     # 이미 SRT 파일이 존재하는지 확인
-    srt_path = mp4_path.replace('.mp4', '.srt')
     if os.path.exists(srt_path):
         print(f"이미 처리된 파일입니다: {srt_path}")
         return True
@@ -148,7 +159,8 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
 def main():
     parser = argparse.ArgumentParser(description='MP4 파일에서 SRT 자막을 추출')
     parser.add_argument('mp4_file', help='변환할 MP4 파일 경로')
-    parser.add_argument('--model', default='base', choices=['tiny', 'base', 'small', 'medium', 'large'],
+    parser.add_argument('--model', default='base', 
+                      choices=['tiny', 'base', 'small', 'medium', 'large', 'large-v2', 'large-v3'],
                       help='사용할 Whisper 모델 크기 (기본값: base)')
     parser.add_argument('--keep-audio', action='store_true',
                       help='오디오 파일을 삭제하지 않고 보존')

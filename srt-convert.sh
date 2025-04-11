@@ -1,8 +1,10 @@
 #!/bin/bash
 
 # 스크립트 실행 방법 확인
-if [ $# -ne 1 ]; then
-    echo "사용법: $0 <MP4 파일이 있는 폴더 경로>"
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    echo "사용법: $0 <MP4 파일이 있는 폴더 경로> [모델 크기]"
+    echo "모델 크기 옵션: tiny, base, small, medium, large, large-v2, large-v3"
+    echo "기본값: medium"
     exit 1
 fi
 
@@ -21,6 +23,9 @@ if [ ! -d "$FOLDER_PATH" ]; then
     exit 1
 fi
 
+# 모델 크기 설정 (기본값: medium)
+MODEL_SIZE=${2:-medium}
+
 # 가상환경 활성화
 source venv/bin/activate
 
@@ -32,10 +37,11 @@ if [ $MP4_COUNT -eq 0 ]; then
 fi
 
 echo "총 ${MP4_COUNT}개의 MP4 파일을 처리합니다."
+echo "사용 모델: ${MODEL_SIZE}"
 
 # 시간 측정 결과를 저장할 파일
 TIME_LOG="time.txt"
-echo "파일명,소요시간(초),소요시간(분:초)" > "$TIME_LOG"
+echo "파일명,소요시간(초),소요시간(분:초),모델" > "$TIME_LOG"
 
 # 각 MP4 파일 처리
 for mp4_file in "$FOLDER_PATH"/*.mp4; do
@@ -47,7 +53,7 @@ for mp4_file in "$FOLDER_PATH"/*.mp4; do
         start_time=$(date +%s)
         
         # 파일 처리
-        python mp4_srt_puller.py "$mp4_file" --model large-v3 --keep-audio
+        python mp4_srt_puller.py "$mp4_file" --model "$MODEL_SIZE" --keep-audio
         
         # 종료 시간 기록 및 소요 시간 계산
         end_time=$(date +%s)
@@ -55,7 +61,7 @@ for mp4_file in "$FOLDER_PATH"/*.mp4; do
         formatted_time=$(format_time $elapsed_time)
         
         # 결과 기록
-        echo "$filename,$elapsed_time,$formatted_time" >> "$TIME_LOG"
+        echo "$filename,$elapsed_time,$formatted_time,$MODEL_SIZE" >> "$TIME_LOG"
         
         echo "완료: $filename (소요시간: $formatted_time)"
         echo "----------------------------------------"

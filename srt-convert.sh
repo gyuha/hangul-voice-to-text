@@ -46,7 +46,7 @@ for mp4_file in "$FOLDER_PATH"/*.mp4; do
         elapsed_time=$((end_time - start_time))
         
         # 결과 기록
-        echo "$filename\t$elapsed_time" >> "$TIME_LOG"
+        echo "$filename,$elapsed_time" >> "$TIME_LOG"
         
         echo "완료: $filename (소요시간: ${elapsed_time}초)"
         echo "----------------------------------------"

@@ -23,7 +23,7 @@ if [ $MP4_COUNT -eq 0 ]; then
     exit 1
 fi
 
-echo "총 $MP4_COUNT개의 MP4 파일을 처리합니다."
+echo "총 ${MP4_COUNT}개의 MP4 파일을 처리합니다."
 
 # 각 MP4 파일 처리
 for mp4_file in "$FOLDER_PATH"/*.mp4; do

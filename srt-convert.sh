@@ -6,6 +6,14 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+# 시간을 분:초 형식으로 변환하는 함수
+format_time() {
+    local seconds=$1
+    local minutes=$((seconds / 60))
+    local remaining_seconds=$((seconds % 60))
+    echo "${minutes}분 ${remaining_seconds}초"
+}
+
 # 폴더 경로 확인
 FOLDER_PATH="$1"
 if [ ! -d "$FOLDER_PATH" ]; then
@@ -27,7 +35,7 @@ echo "총 ${MP4_COUNT}개의 MP4 파일을 처리합니다."
 
 # 시간 측정 결과를 저장할 파일
 TIME_LOG="time.txt"
-echo "파일명,소요시간(초)" > "$TIME_LOG"
+echo "파일명,소요시간(초),소요시간(분:초)" > "$TIME_LOG"
 
 # 각 MP4 파일 처리
 for mp4_file in "$FOLDER_PATH"/*.mp4; do
@@ -44,11 +52,12 @@ for mp4_file in "$FOLDER_PATH"/*.mp4; do
         # 종료 시간 기록 및 소요 시간 계산
         end_time=$(date +%s)
         elapsed_time=$((end_time - start_time))
+        formatted_time=$(format_time $elapsed_time)
         
         # 결과 기록
-        echo "$filename,$elapsed_time" >> "$TIME_LOG"
+        echo "$filename,$elapsed_time,$formatted_time" >> "$TIME_LOG"
         
-        echo "완료: $filename (소요시간: ${elapsed_time}초)"
+        echo "완료: $filename (소요시간: $formatted_time)"
         echo "----------------------------------------"
     fi
 done

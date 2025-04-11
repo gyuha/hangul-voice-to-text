@@ -24,6 +24,7 @@ def extract_audio(mp4_path):
         '-acodec', 'pcm_s16le',  # 16-bit PCM 오디오
         '-ar', '16000',  # 16kHz 샘플링 레이트
         '-ac', '1',  # 모노 오디오
+        '-y',  # 기존 파일 덮어쓰기
         wav_path
     ]
     
@@ -41,6 +42,31 @@ def format_timestamp(seconds):
     minutes = int((td.total_seconds() % 3600) // 60)
     seconds = td.total_seconds() % 60
     return f"{hours:02d}:{minutes:02d}:{seconds:06.3f}".replace('.', ',')
+
+def merge_similar_segments(segments, time_threshold=2.0):
+    """연속된 동일한 텍스트를 하나로 합치기"""
+    if not segments:
+        return segments
+    
+    merged_segments = []
+    current_segment = segments[0].copy()
+    
+    for next_segment in segments[1:]:
+        # 현재 세그먼트와 다음 세그먼트의 텍스트가 동일하고
+        # 시간 간격이 임계값보다 작은 경우
+        if (current_segment['text'].strip() == next_segment['text'].strip() and
+            next_segment['start'] - current_segment['end'] <= time_threshold):
+            # 끝 시간만 업데이트
+            current_segment['end'] = next_segment['end']
+        else:
+            # 현재 세그먼트를 결과에 추가하고 다음 세그먼트로 이동
+            merged_segments.append(current_segment)
+            current_segment = next_segment.copy()
+    
+    # 마지막 세그먼트 추가
+    merged_segments.append(current_segment)
+    
+    return merged_segments
 
 def create_srt(segments, output_path):
     """Whisper의 세그먼트 결과를 SRT 형식으로 변환"""
@@ -86,25 +112,31 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
         # 음성 인식 실행
         print("음성 인식 중...")
         
-        # 음성 인식 실행
+        # 음성 인식 실행 (최적화된 파라미터)
         result = model.transcribe(
             wav_path,
             language="ko",
             verbose=True,  # 자세한 로그 출력
-            compression_ratio_threshold=2.8,
-            logprob_threshold=-1.0,
-            no_speech_threshold=0.5,
+            temperature=0.0,  # 가장 정확한 결과를 위해 온도를 0으로 설정
+            compression_ratio_threshold=2.4,  # 압축 비율 임계값 설정
+            logprob_threshold=-1.0,  # 로그 확률 임계값 설정
+            no_speech_threshold=0.6,  # 무음 임계값 설정
+            condition_on_previous_text=True,  # 이전 텍스트를 고려
+            initial_prompt="다음은 한국어 음성입니다."  # 초기 프롬프트 설정
         )
         
+        # 연속된 동일한 텍스트 합치기
+        merged_segments = merge_similar_segments(result['segments'])
+        
         # 진행 상황 출력
-        total_segments = len(result['segments'])
-        for i, segment in enumerate(result['segments'], 1):
+        total_segments = len(merged_segments)
+        for i, segment in enumerate(merged_segments, 1):
             print_progress(segment, total_segments, i)
             # 실시간으로 보이도록 잠시 대기
             time.sleep(0.1)
         
         # SRT 파일 생성
-        create_srt(result['segments'], srt_path)
+        create_srt(merged_segments, srt_path)
         print(f"\n자막 파일이 생성되었습니다: {srt_path}")
         
         return True

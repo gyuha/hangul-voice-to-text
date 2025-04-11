@@ -84,7 +84,14 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
         result = model.transcribe(
             wav_path,
             language="ko",
-            verbose=True  # 자세한 로그 출력
+            verbose=True,  # 자세한 로그 출력
+            # compression_ratio_threshold=3.4,
+            # logprob_threshold=-1.0,
+            # no_speech_threshold=0.6,
+            # condition_on_previous_text=True,
+            # initial_prompt=None,
+            # word_timestamps=True,
+            
         )
         
         # 진행 상황 출력

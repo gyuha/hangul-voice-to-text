@@ -91,7 +91,7 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
             wav_path,
             language="ko",
             verbose=True,  # 자세한 로그 출력
-            compression_ratio_threshold=2.8
+            compression_ratio_threshold=2.8,
             logprob_threshold=-1.0,
             no_speech_threshold=0.5,
         )

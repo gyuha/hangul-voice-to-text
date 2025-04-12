@@ -152,12 +152,12 @@ def transcribe_video(mp4_path, model_size="base", keep_audio=False):
             wav_path,
             language="ko",
             verbose=True,  # 자세한 로그 출력
-            temperature=0.0,  # 가장 정확한 결과를 위해 온도를 0으로 설정
-            compression_ratio_threshold=2.4,  # 압축 비율 임계값 설정
-            logprob_threshold=-1.0,  # 로그 확률 임계값 설정
+            temperature=0.01,  # 가장 정확한 결과를 위해 온도를 0으로 설정,  값이 낮을수록(0에 가까울수록) 더 결정적인(deterministic) 결과를 생성하여 정확도가 높아집니다. 값이 높을수록 더 다양한 결과를 생성하지만 오류 가능성도 증가합니다.
+            compression_ratio_threshold=1.8,  # 압축 비율 임계값 설정, 텍스트의 압축 비율이 이 임계값보다 높으면 해당 세그먼트를 무시합니다. 반복적인 내용이나 장애가 있는 오디오 구간을 걸러내는 데 도움이 됩니다.
+            logprob_threshold=-1.2,  # 로그 확률 임계값 설정, 값이 높을수록 더 많은 구간을 "무음"으로 분류합니다. 배경 소음이 많은 오디오의 경우 이 값을 낮추면 도움이 될 수 있습니다.
             no_speech_threshold=0.6,  # 무음 임계값 설정
-            condition_on_previous_text=True,  # 이전 텍스트를 고려
-            initial_prompt="",  # 초기 프롬프트 설정
+            condition_on_previous_text=False,  # 이전 텍스트를 고려
+            initial_prompt="이것은 한국어 회의 녹음이며, 여러 사람이 서로 대화하는 내용입니다. 반복적인 문장이 없이 자연스러운 대화로 진행됩니다.",  # 초기 프롬프트 설정
             fp16=device == "cuda"  # GPU 사용 시 FP16 활성화
         )
         
